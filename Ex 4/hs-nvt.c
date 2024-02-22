@@ -74,22 +74,6 @@ void set_packing_fraction(void){
 
 int main(int argc, char* argv[]){
 
-    //loop over x
-    for(int i = 1; i < n_particles; i++)
-    {
-        //loop over y
-        for(int j = 1; j < n_particles; j++)
-        {
-            //loop over z
-            for(int k = 1; k < n_particles; k++)
-            {
-                //FCC's have 4 complete spheres per cell
-                printf("test\n");
-            }
-        }
-    }
-
-
     assert(packing_fraction > 0.0 && packing_fraction < 1.0);
     assert(diameter > 0.0);
     assert(delta > 0.0);
@@ -110,11 +94,32 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
+
+    //initialization's required for the loops below
+    int i, j, k;
+
+    //loop over x
+    for(i = 0; i < n_particles; i++)
+    {
+        //loop over y
+        for(j = 0; j < n_particles; j++)
+        {
+            //loop over z
+            for(k = 0; k < n_particles; k++)
+            {
+                //FCC's have 4 complete spheres per cell
+                printf("test\n");
+            }
+        }
+    }
+
+
+
     set_packing_fraction();
 
     dsfmt_seed(time(NULL));
 
-    int accepted = 0;
+    /*int accepted = 0;
     int step, n;
     for(step = 0; step < mc_steps; ++step){
         for(n = 0; n < n_particles; ++n){
@@ -126,7 +131,7 @@ int main(int argc, char* argv[]){
             accepted = 0;
             write_data(step);
         }
-    }
+    }*/
 
     return 0;
 }
