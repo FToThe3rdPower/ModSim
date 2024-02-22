@@ -15,11 +15,11 @@
 int main() /* The "int" is saying this func will return integers*/
 {
     /* Let's define our consts */
-    int N=5; /*number of spheres per axis*/
+    int N=20; /*number of spheres per axis*/
     int n=0; //sphere id?
     int numSphr=4*N*N*N; /*the total number of sphere's we'll be worrying about*/
-    float a=4.0; /*the distance between points???*/
-    float d=1.0; /*the DIAMETER of the sphere, the unit length for this exercise*/
+    float a=10.0; /*the distance between points???*/
+    float d=5.0; /*the DIAMETER of the sphere, the unit length for this exercise*/
     float b=1.1*d; // ??? the upper bound for "l", the lattice spacing in the innermost loop
 
     /* Now lets define the axis arrays, they need to be big enough to store a coord for every sphere*/
