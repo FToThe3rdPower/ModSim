@@ -9,10 +9,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+//size of particle coord array is [N, Ndim]
 #define NDIM 3
-#define N 1000
+#define N 100
 
-/* Initialization variables */
+/* Initialization consts */
 const int mc_steps = 10000;
 const int output_steps = 100;
 const double packing_fraction = 0.6;
@@ -20,8 +21,9 @@ const double diameter = 1.0;
 const double delta = 0.1;
 const char* init_filename = "fcc.dat";
 
-/* Simulation variables */
-int n_particles = 0;
+/* Simulation consts */
+//n particles per dimension
+int n_particles = 100;
 double radius;
 double particle_volume;
 double r[N][NDIM];
@@ -34,15 +36,16 @@ void read_data(void){
    
 }
 
+//particle movement for later stuff
 int move_particle(void){
     /*--------- Your code goes here -----------*/
-    
+    return 0;
 }
 
 void write_data(int step){
     char buffer[128];
     sprintf(buffer, "coords_step%07d.dat", step);
-    FILE* fp = fopen(buffer, "w");
+    FILE* fp = fopen("xyz.dat"/*buffer*/, "w");
     int d, n;
     fprintf(fp, "%d\n", n_particles);
     for(d = 0; d < NDIM; ++d){
@@ -70,6 +73,22 @@ void set_packing_fraction(void){
 }
 
 int main(int argc, char* argv[]){
+
+    //loop over x
+    for(int i = 1; i < n_particles; i++)
+    {
+        //loop over y
+        for(int j = 1; j < n_particles; j++)
+        {
+            //loop over z
+            for(int k = 1; k < n_particles; k++)
+            {
+                //FCC's have 4 complete spheres per cell
+                printf("test\n");
+            }
+        }
+    }
+
 
     assert(packing_fraction > 0.0 && packing_fraction < 1.0);
     assert(diameter > 0.0);
