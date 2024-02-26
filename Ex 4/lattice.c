@@ -88,38 +88,38 @@ int main(int argc, char *argv[]){
                 z[m+6] = (float)k * spacing;
 
                 //corner 2
-                x[m+7] = (float)i * 2 * spacing;
-                y[m+7] = (float)j * 2 * spacing;
-                z[m+7] = (float)k * 2 * spacing;
+                x[m+7] = (float)i * spacing + spacing;
+                y[m+7] = (float)j * spacing + spacing;
+                z[m+7] = (float)k * spacing + spacing;
 
                 //corner 3
                 x[m+8] = (float)i * spacing;
-                y[m+8] = (float)j * 2 * spacing;
-                z[m+8] = (float)k * 2 * spacing;
+                y[m+8] = (float)j * spacing + spacing;
+                z[m+8] = (float)k * spacing + spacing;
 
                 //corner 4
-                x[m+7] = (float)i * 2 * spacing;
+                x[m+7] = (float)i * spacing + spacing;
                 y[m+7] = (float)j * spacing;
-                z[m+7] = (float)k * 2 * spacing;
+                z[m+7] = (float)k * spacing + spacing;
 
                 //corner 5
-                x[m+7] = (float)i * 2 * spacing;
-                y[m+7] = (float)j * 2 * spacing;
+                x[m+7] = (float)i * spacing + spacing;
+                y[m+7] = (float)j * spacing + spacing;
                 z[m+7] = (float)k * spacing;
 
                 //corner 6
                 x[m+8] = (float)i * spacing;
                 y[m+8] = (float)j * spacing;
-                z[m+8] = (float)k * 2 * spacing;
+                z[m+8] = (float)k * spacing + spacing;
 
                 //corner 7
-                x[m+9] = (float)i * 2 * spacing;
+                x[m+9] = (float)i * spacing + spacing;
                 y[m+9] = (float)j * spacing;
                 z[m+9] = (float)k * spacing;
 
                 //corner 8
                 x[m+10] = (float)i * spacing;
-                y[m+10] = (float)j * 2 * spacing;
+                y[m+10] = (float)j * spacing + spacing;
                 z[m+10] = (float)k * spacing;
                 
                 
