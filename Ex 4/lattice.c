@@ -5,10 +5,12 @@
 // import standard bool for storing only the unique data before writin it to the file
 #include <stdbool.h>
 
+//create a custom data structure to store the coords for later checking
+typedef struct {float x; float y; float z;} coordStruc;
+
 //check for duplicates to avoid russian nesting doll particles that violate the Pauli exc. prin.
 //They will appear to multiply with the movement code
-/*
-bool is_duplicate(Coordinate* arr, size_t size, Coordinate coord)
+bool is_duplicate(coordStruc* arr, size_t size, coordStruc coord)
 {
   for (size_t i = 0; i < size; ++i)
   {
@@ -19,15 +21,14 @@ bool is_duplicate(Coordinate* arr, size_t size, Coordinate coord)
   }
   return false;
 }
-*/
+
 
 
 // Entry point of the program with command line arguments
 // argc: argument count, argv: argument vector (list of arguments)
 int main(int argc, char *argv[]){
     // Convert the first command line argument to an int
-    //used determine the number of points along one edge of the cube
-    //now it's the number of unit cells
+    // it's the number of unit cells
     int N = atoi(argv[1]);
 
     //determining the total number of particle coords. 1 whole particle per fcc face, 6 faces, N^3 for the dimensions
@@ -43,22 +44,22 @@ int main(int argc, char *argv[]){
     // Declare loop counter vars
     int i, j, k;
 
-    // Declare arrays to store the x, y, and z coordinates of the points
+    // Declare arrays to store the x, y, and z coordStrucs of the points
     //in the lattice
     float x[totalParticles];
     float y[totalParticles];
     float z[totalParticles]; // These arrays can store N^3 points as it's a 3D cubic lattice
 
-    //An empty array to store only unique coordinates
+    //An empty array to store only unique coordStrucs
  /*   size_t max_unique_coords = totalParticles;
-    Coordinate unique_coords[max_unique_coords];
+    coordStruc unique_coords[max_unique_coords];
     size_t unique_count = 0;
 */
 
     // Initialize a counter for indexing the arrays
     int m = 0;
 
-    // Declare a file pointer for writing the coordinates to a file
+    // Declare a file pointer for writing the coordStrucs to a file
     // Open the file "simple_cubic.xyz" for writing.
     //w modes means if the file doesn't exist, it will be created.
     //an err will be caught by the if
@@ -79,11 +80,11 @@ int main(int argc, char *argv[]){
     fprintf(dataFilePntr, "%f %f\n", 0.0, N*spacing);
 
 
-    // Generate the coordinates for each point in the cell
+    // Generate the coordStrucs for each point in the cell
     for(i = 0; i < N; i++){
         for(j = 0; j < N; j++){
             for(k = 0; k < N; k++){
-                // Calculate the coordinates for the current point and store them in the arrays
+                // Calculate the coordStrucs for the current point and store them in the arrays
                 //1st middle
                 x[m] = (float)i * spacing;
                 y[m] = (float)j * spacing + halfSpacing;
@@ -156,7 +157,7 @@ int main(int argc, char *argv[]){
                 z[m+13] = (float)k * spacing;
                 
                 
-                // Write the coordinates to the file
+                // Write the coordStrucs to the file
                 fprintf(dataFilePntr, "%f %f %f\n", x[m], y[m], z[m]);
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+1], y[m+1], z[m+1]);
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+2], y[m+2], z[m+2]);
@@ -174,7 +175,7 @@ int main(int argc, char *argv[]){
 
 
 
-                // Print the coordinates to the console for verification
+                // Print the coordStrucs to the console for verification
                 printf("\n%f %f %f\n", x[m], y[m], z[m]);
                 printf("%f %f %f\n", x[m+1], y[m+1], z[m+1]);
                 printf("%f %f %f\n", x[m+2], y[m+2], z[m+2]);
@@ -201,7 +202,7 @@ int main(int argc, char *argv[]){
     //output some relevant info
     printf("total coords: %i, space: %f, hlfSpace: %f\n", totalParticles, spacing, halfSpacing);
 
-    // Close the file after writing all the coordinates
+    // Close the file after writing all the coordStrucs
     fclose(dataFilePntr);
 
     // Return 0 to indicate successful execution of the program
