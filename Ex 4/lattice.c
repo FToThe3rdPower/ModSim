@@ -26,7 +26,8 @@ bool is_duplicate(coordStruc* arr, size_t size, coordStruc coord)
 
 // Entry point of the program with command line arguments
 // argc: argument count, argv: argument vector (list of arguments)
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
     // Convert the first command line argument to an int
     // it's the number of unit cells
     int N = atoi(argv[1]);
@@ -44,30 +45,30 @@ int main(int argc, char *argv[]){
     // Declare loop counter vars
     int i, j, k;
 
-    // Declare arrays to store the x, y, and z coordStrucs of the points
+    // Declare arrays to store the x, y, and z coords of the points
     //in the lattice
     float x[totalParticles];
     float y[totalParticles];
     float z[totalParticles]; // These arrays can store N^3 points as it's a 3D cubic lattice
 
-    //An empty array to store only unique coordStrucs
- /*   size_t max_unique_coords = totalParticles;
+    //An empty array to store only unique coords
+    size_t max_unique_coords = totalParticles;
     coordStruc unique_coords[max_unique_coords];
     size_t unique_count = 0;
-*/
+
 
     // Initialize a counter for indexing the arrays
     int m = 0;
 
-    // Declare a file pointer for writing the coordStrucs to a file
+    // Declare a file pointer for writing the coords to a file
     // Open the file "simple_cubic.xyz" for writing.
     //w modes means if the file doesn't exist, it will be created.
     //an err will be caught by the if
     FILE *dataFilePntr = fopen("fcc.dat", "w");
     if (dataFilePntr == NULL)
     {
-    printf("Error opening file!\n");
-    return 1;
+        printf("Error opening file!\n");
+        return 1;
     }
 
     //The first 4 lines are info for the WebGL visualizer to know # of 'particles' and box size
@@ -80,11 +81,14 @@ int main(int argc, char *argv[]){
     fprintf(dataFilePntr, "%f %f\n", 0.0, N*spacing);
 
 
-    // Generate the coordStrucs for each point in the cell
-    for(i = 0; i < N; i++){
-        for(j = 0; j < N; j++){
-            for(k = 0; k < N; k++){
-                // Calculate the coordStrucs for the current point and store them in the arrays
+    // Generate the coords for each point in the cell
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            for(k = 0; k < N; k++)
+            {
+                // Calculate the coords for the current point and store them in the arrays
                 //1st middle
                 x[m] = (float)i * spacing;
                 y[m] = (float)j * spacing + halfSpacing;
@@ -114,7 +118,6 @@ int main(int argc, char *argv[]){
                 x[m+5] = (float)i * spacing + halfSpacing;
                 y[m+5] = (float)j * spacing;
                 z[m+5] = (float)k * spacing + halfSpacing;
-                
 
                 //corner 1 
                 x[m+6] = (float)i * spacing;
@@ -157,7 +160,8 @@ int main(int argc, char *argv[]){
                 z[m+13] = (float)k * spacing;
                 
                 
-                // Write the coordStrucs to the file
+                // Write the coords to the file
+                /*
                 fprintf(dataFilePntr, "%f %f %f\n", x[m], y[m], z[m]);
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+1], y[m+1], z[m+1]);
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+2], y[m+2], z[m+2]);
@@ -172,10 +176,9 @@ int main(int argc, char *argv[]){
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+11], y[m+11], z[m+11]);
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+12], y[m+12], z[m+12]);
                 fprintf(dataFilePntr, "%f %f %f\n", x[m+13], y[m+13], z[m+13]);
+                */
 
-
-
-                // Print the coordStrucs to the console for verification
+                // Print the coords to the console for verification
                 printf("\n%f %f %f\n", x[m], y[m], z[m]);
                 printf("%f %f %f\n", x[m+1], y[m+1], z[m+1]);
                 printf("%f %f %f\n", x[m+2], y[m+2], z[m+2]);
@@ -191,6 +194,17 @@ int main(int argc, char *argv[]){
                 printf("%f %f %f\n", x[m+12], y[m+12], z[m+12]);
                 printf("%f %f %f\n", x[m+13], y[m+13], z[m+13]);
 
+                //Actually checking that generated coords are unique
+                for (int p = 0; p < 14; p++)
+                {
+                    coordStruc currentCoord = {x[m+p], y[m+p], z[m+p]};
+                    if (!is_duplicate(unique_coords, unique_count, currentCoord))
+                    {
+                        unique_coords[unique_count] = currentCoord;
+                        unique_count++;
+                    }
+                }
+
 
                 // Increment the counter for the next cell
                 m+=14;
@@ -199,10 +213,19 @@ int main(int argc, char *argv[]){
         }
     }
 
+    for (size_t u = 0; u < unique_count; ++u)
+    {
+        fprintf(dataFilePntr, "%f %f %f\n", unique_coords[u].x, unique_coords[u].y, unique_coords[u].z);
+    }
+
+
+    //sanity check to make sure the number is less
+    printf("\nunique_count: %i\n", (int)unique_count);
+
     //output some relevant info
     printf("total coords: %i, space: %f, hlfSpace: %f\n", totalParticles, spacing, halfSpacing);
 
-    // Close the file after writing all the coordStrucs
+    // Close the file after writing all the coords
     fclose(dataFilePntr);
 
     // Return 0 to indicate successful execution of the program
