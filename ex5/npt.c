@@ -14,7 +14,7 @@
 const int mc_steps = 100000;
 const int output_steps = 100;
 const double packing_fraction = 0.6;
-const double diameter = 1.0;
+double diameter = 1.0;
 const double delta  = 0.1;
 /* Volume change -deltaV, delta V */
 const double deltaV = 2.0;
@@ -33,14 +33,61 @@ double box[NDIM];
 /* Functions */
 int change_volume(void){
     /*--------- Your code goes here -----------*/
+    return 0;
 }
 
-void read_data(void){
-/*--------- Your code goes here -----------*/
+void read_data(void)
+{
+    //open the file
+    FILE *file;
+    file = fopen(init_filename, "r");
+
+    //some vars for getting the box size
+    float len0;
+    float len1;
+
+    //scan the first line for the number of particles
+    fscanf(file, "%i\n", &n_particles);
+
+    //set n_particles right
+    if (n_particles > N) n_particles = N;
+
+    //sanity check
+    printf("num of particles: %i", n_particles);
+
+    //get the length of the box's side
+    for(int b=0; b<NDIM; b++)
+    {
+        //where am I
+        printf("\nb: %i\t", b);
+
+        //scannin the second line for the box start and stop
+        fscanf(file, "%f\t%f\n", &len0, &len1);
+
+        //storin the box len
+        box[b] = len1 - len0;
+
+        //check
+        printf("\tbox len %lf", box[b]);
+    }
+
+    //reading the coords
+    for (int a = 0 ; a < n_particles ; a++) //reading coordinates of particles
+    {
+        //print so we know what's goin on
+        //printf("%i\n", a);
+
+        //scan the line for the coords
+        fscanf(file ,"%lf\t%lf\t%lf\t%lf\n", &(r[a][0]), &(r[a][1]), &(r[a][2]), &diameter);
+    }
+
+    //close the file, we're done here boys
+    fclose (file);
 }
 
 int move_particle(void){
 /*--------- Your code goes here -----------*/
+    return 0;
 }
 
 void write_data(int step){
@@ -80,14 +127,14 @@ int main(int argc, char* argv[]){
     if(NDIM == 3) particle_volume = M_PI * pow(diameter, 3.0) / 6.0;
     else if(NDIM == 2) particle_volume = M_PI * pow(radius, 2.0);
     else{
-        printf("Number of dimensions NDIM = %d, not supported.", NDIM);
+        printf("\nNumber of dimensions NDIM = %d, not supported.", NDIM);
         return 0;
     }
 
     read_data();
 
     if(n_particles == 0){
-        printf("Error: Number of particles, n_particles = 0.\n");
+        printf("\nError: Number of particles, n_particles = 0.");
         return 0;
     }
 
@@ -95,7 +142,7 @@ int main(int argc, char* argv[]){
 
     dsfmt_seed(time(NULL));
             
-    printf("#Step \t Volume \t Move-acceptance\t Volume-acceptance \n");
+    printf("\n\n#Step \t Volume \t Move-acceptance\t Volume-acceptance");
 
     int move_accepted = 0;
     int vol_accepted = 0;
@@ -107,7 +154,7 @@ int main(int argc, char* argv[]){
         vol_accepted += change_volume();
 
         if(step % output_steps == 0){
-            printf("%d \t %lf \t %lf \t %lf \n", 
+            printf("\n%d \t %lf \t %lf \t %lf", 
                     step, box[0] * box[1] * box[2], 
                     (double)move_accepted / (n_particles * output_steps), 
                     (double)vol_accepted /  output_steps);
