@@ -90,6 +90,15 @@ int move_particle(void){
     return 0;
 }
 
+int adjust_delta(int move_accepted, int vol_accepted){
+    //Adjusting delta and deltaV by 5% each cycle of output_steps to keep the respective acceptance ratios between 45% and 55%
+    if(((double)move_accepted / (n_particles * output_steps)) < 0.45) delta *= 0.95;
+    else if(((double)move_accepted / (n_particles * output_steps)) > 0.55) delta *= 1.05;
+    if(((double)vol_accepted / output_steps) < 0.45) deltaV *= 0.95;
+    else if(((double)vol_accepted / output_steps) > 0.55) deltaV *= 1.05;
+    return 0;
+}
+
 void write_data(int step){
     char buffer[128];
     sprintf(buffer, "coords_step%07d.dat", step);
