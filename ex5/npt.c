@@ -15,9 +15,9 @@ const int mc_steps = 100000;
 const int output_steps = 100;
 const double packing_fraction = 0.6;
 double diameter = 1.0;
-const double delta  = 0.1;
+double delta  = 0.1;
 /* Volume change -deltaV, delta V */
-const double deltaV = 2.0;
+double deltaV = 2.0;
 /* Reduced pressure \beta P */
 const double betaP = 3.0;
 const char* init_filename = "fcc.dat";
@@ -78,7 +78,7 @@ void read_data(void)
         //printf("%i\n", a);
 
         //scan the line for the coords
-        fscanf(file ,"%lf\t%lf\t%lf\t%lf\n", &(r[a][0]), &(r[a][1]), &(r[a][2]), &diameter);
+        fscanf(file ,"%lf\t%lf\t%lf\n", &(r[a][0]), &(r[a][1]), &(r[a][2]));//had another %lf\n in the string, &diameter);
     }
 
     //close the file, we're done here boys
