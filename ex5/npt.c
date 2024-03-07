@@ -16,13 +16,13 @@ const int output_steps = 100;
 //steps before calculating the volume
 int init_steps = 100;
 
-const double packing_fraction = 0.6;
+double packing_fraction = 0.6;
 double diameter = 1.0;
 double delta  = 0.1;
 /* Volume change -deltaV, delta V */
-double deltaV = 0.02;
+double deltaV = 1.0;
 /* Reduced pressure \beta P */
-const double betaP = 3.0;
+double betaP = 3.0;
 const char* init_filename = "fcc.dat";
 
 /* Simulation variables */
@@ -70,7 +70,7 @@ int change_volume(void){
         }
     }
 
-    //Enforcing the appropriate acceptance rule
+    //Enforcing the Boltzmann acceptance rule
     double rule_value = pow(volume_trial / volume, N) * exp(-betaP * delta_volume_trial); //Value for acceptance rule probability.
     if(rule_value < 1){
         if(dsfmt_genrand() > rule_value) return 0; //If random value is above the acceptance rule probability, return 0.
@@ -237,62 +237,82 @@ void set_packing_fraction(void){
 }
 
 int main(int argc, char* argv[]){
-
-    radius = 0.5 * diameter;
-
-    if(NDIM == 3) particle_volume = M_PI * pow(diameter, 3.0) / 6.0;
-    else if(NDIM == 2) particle_volume = M_PI * pow(radius, 2.0);
-    else{
-        printf("\nNumber of dimensions NDIM = %d, not supported.", NDIM);
-        return 0;
-    }
-
-    read_data();
-
-    if(n_particles == 0){
-        printf("\nError: Number of particles, n_particles = 0.");
-        return 0;
-    }
-
-    set_packing_fraction();
-
-    dsfmt_seed(time(NULL));
-            
-    printf("\n\n#Step \t Volume \t Move-acceptance\t Volume-acceptance");
-
     //avg volume calc file and sum var
     FILE* volumeFile = fopen ("volumes.dat", "a");//!!! needs to be in a mode for making data for plots
-    double sum_volume = 0.0;
 
-    int move_accepted = 0;
-    int vol_accepted = 0;
-    int step, n;
-    for(step = 0; step < mc_steps; ++step){
-        for(n = 0; n < n_particles; ++n){
-            move_accepted += move_particle();
-        }
-        vol_accepted += change_volume();
+    //packing frac loop
+    for (int c=1; c<8; c++)
+    {
+        //set new packing frac
+        packing_fraction = 0.1 * (double)c;
 
-        if(step % output_steps == 0){
-            printf("\n%d \t %lf \t %lf \t %lf", 
-                    step, box[0] * box[1] * box[2], 
-                    (double)move_accepted / (n_particles * output_steps), 
-                    (double)vol_accepted /  output_steps);
-            move_accepted = 0;
-            vol_accepted = 0;
-            write_data(step);
+        //print a header for the first line of the file
+        if (c == 1){fprintf(volumeFile, "packing frac \t mc_steps \t init_steps \t n_particles \t\t average_volume \t betaP \t\t delta \t\t deltaV\n");}
 
-            //sum the volumes for the average
-            if(step >= init_steps){
-                sum_volume += box[0] * box[1] * box[2]; //Summing for average volume
+        //pressure loop
+        for (int w=1; w<11; w++)
+        {
+            //set new pressure
+            betaP = 10 * (double)w;
+
+            radius = 0.5 * diameter;
+
+            if(NDIM == 3) particle_volume = M_PI * pow(diameter, 3.0) / 6.0;
+            else if(NDIM == 2) particle_volume = M_PI * pow(radius, 2.0);
+            else{
+                printf("\nNumber of dimensions NDIM = %d, not supported.", NDIM);
+                return 2;
             }
+
+            read_data();
+
+            if(n_particles == 0){
+                printf("\nError: Number of particles, n_particles = 0.");
+                return 2;
+            }
+
+            set_packing_fraction();
+
+            dsfmt_seed(time(NULL));
+            
+            if (c == 1 & w==1){
+            printf("\n\n#Step \t Volume \t Move-acceptance\t Volume-acceptance");
+            }
+
+            double sum_volume = 0.0;
+
+
+            int move_accepted = 0;
+            int vol_accepted = 0;
+            int step, n;
+            for(step = 0; step < mc_steps; ++step){
+                for(n = 0; n < n_particles; ++n){
+                    move_accepted += move_particle();
+                }
+                vol_accepted += change_volume();
+
+                if(step % output_steps == 0){
+                    printf("\n%d \t %lf \t %lf \t %lf", 
+                            step, box[0] * box[1] * box[2], 
+                            (double)move_accepted / (n_particles * output_steps), 
+                            (double)vol_accepted /  output_steps);
+                    move_accepted = 0;
+                    vol_accepted = 0;
+                    write_data(step);
+
+                    //sum the volumes for the average
+                    if(step >= init_steps){
+                        sum_volume += box[0] * box[1] * box[2]; //Summing for average volume
+                    }
+                }
+            }
+
+            //Printing data for plots: pressure, average V, particle number N, number of simulation steps, delta, deltaV
+            double average_volume = sum_volume * output_steps / (mc_steps - init_steps);
+            fprintf (volumeFile , "%lf\t\t %d\t\t  %d\t\t  %d\t\t  %lf\t\t%lf\t%lf\t%lf\n", packing_fraction, mc_steps, init_steps, n_particles, average_volume, betaP, delta, deltaV);
         }
     }
 
-    //Printing data for plots: pressure, average V, particle number N, number of simulation steps, delta, deltaV
-    double average_volume = sum_volume * output_steps / (mc_steps - init_steps);
-    //fprintf(volumeFile, "mc_steps \t init_steps \t n_particles \t average_volume \t betaP \t\t delta \t\t deltaV\n");
-    fprintf (volumeFile , "%d\t\t  %d\t\t  %d\t\t  %lf\t\t%lf\t%lf\t%lf\n", mc_steps, init_steps, n_particles, average_volume, betaP, delta, deltaV);
-
+    fclose (volumeFile);
     return 0;
 }
