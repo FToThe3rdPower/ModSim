@@ -13,6 +13,9 @@
 /* Initialization variables */
 const int mc_steps = 5000;//was 100000
 const int output_steps = 100;
+//steps before calculating the volume
+int init_steps = 100;
+
 const double packing_fraction = 0.6;
 double diameter = 1.0;
 double delta  = 0.1;
@@ -48,7 +51,6 @@ int change_volume(void){
         for(int d = 0; d < NDIM; ++d) r_trial[n][d] = r[n][d] * scale_factor;
     }
 
-    int overlap = 0;
     double distance;
     double s[NDIM];
     if(delta_volume_trial < 0){
@@ -104,7 +106,7 @@ void read_data(void)
     fscanf(file, "%i\n", &n_particles);
 
     //set n_particles right
-    if (n_particles > N) n_particles = N;
+    //if (n_particles > N) n_particles = N;
 
     //sanity check
     printf("num of particles: %i", n_particles);
@@ -258,6 +260,10 @@ int main(int argc, char* argv[]){
             
     printf("\n\n#Step \t Volume \t Move-acceptance\t Volume-acceptance");
 
+    //avg volume calc file and sum var
+    FILE* volumeFile = fopen ("volumes.dat", "a");//!!! needs to be in a mode for making data for plots
+    double sum_volume = 0.0;
+
     int move_accepted = 0;
     int vol_accepted = 0;
     int step, n;
@@ -275,8 +281,18 @@ int main(int argc, char* argv[]){
             move_accepted = 0;
             vol_accepted = 0;
             write_data(step);
+
+            //sum the volumes for the average
+            if(step >= init_steps){
+                sum_volume += box[0] * box[1] * box[2]; //Summing for average volume
+            }
         }
     }
+
+    //Printing data for plots: pressure, average V, particle number N, number of simulation steps, delta, deltaV
+    double average_volume = sum_volume * output_steps / (mc_steps - init_steps);
+    //fprintf(volumeFile, "mc_steps \t init_steps \t n_particles \t average_volume \t betaP \t\t delta \t\t deltaV\n");
+    fprintf (volumeFile , "%d\t\t  %d\t\t  %d\t\t  %lf\t\t%lf\t%lf\t%lf\n", mc_steps, init_steps, n_particles, average_volume, betaP, delta, deltaV);
 
     return 0;
 }
