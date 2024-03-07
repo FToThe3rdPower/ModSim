@@ -11,13 +11,13 @@
 #define N 1000
 
 /* Initialization variables */
-const int mc_steps = 100000;
+const int mc_steps = 5000;//was 100000
 const int output_steps = 100;
 const double packing_fraction = 0.6;
 double diameter = 1.0;
 double delta  = 0.1;
 /* Volume change -deltaV, delta V */
-double deltaV = 2.0;
+double deltaV = 0.02;
 /* Reduced pressure \beta P */
 const double betaP = 3.0;
 const char* init_filename = "fcc.dat";
@@ -32,8 +32,62 @@ double box[NDIM];
 
 /* Functions */
 int change_volume(void){
-    /*--------- Your code goes here -----------*/
-    return 0;
+    //yoram's v changer
+    double volume = 1.0;
+    for(int d = 0; d < NDIM; ++d) volume *= box[d];
+
+    double delta_volume_trial = 2 * deltaV * (dsfmt_genrand() - 0.5);
+    double volume_trial = volume + delta_volume_trial;
+    double scale_factor = pow(volume_trial / volume, 1.0 / NDIM);
+    
+    double box_trial[NDIM];
+    double r_trial[N][NDIM];
+
+    for(int d = 0; d < NDIM; ++d) box_trial[d] = box[d] * scale_factor;
+    for(int n = 0; n < n_particles; ++n){
+        for(int d = 0; d < NDIM; ++d) r_trial[n][d] = r[n][d] * scale_factor;
+    }
+
+    int overlap = 0;
+    double distance;
+    double s[NDIM];
+    if(delta_volume_trial < 0){
+        for(int i = 0; i < N; i++){
+            for(int j = 0; j < N; j++){
+                if(i != j){
+                    for(int d = 0; d < NDIM; ++d){
+                        s[d] = fabs(r_trial[i][d] - r[j][d]);
+                        if(s[d] > 0.5 * box[d]) s[d] = box[d] - s[d]; //Nearest image convention
+                    }
+
+                    //Compute distance between particles; if there's overlap, stop testing particles
+                    distance = sqrt(s[0] * s[0] + s[1] * s[1] + s[2] * s[2]);
+                    if(distance < diameter) return 0;
+                }
+            }
+        }
+    }
+
+    //Enforcing the appropriate acceptance rule
+    double rule_value = pow(volume_trial / volume, N) * exp(-betaP * delta_volume_trial); //Value for acceptance rule probability.
+    if(rule_value < 1){
+        if(dsfmt_genrand() > rule_value) return 0; //If random value is above the acceptance rule probability, return 0.
+        else { //If random value is below acceptance rule probability, scale dimensions and return 1.
+            for(int n = 0; n < N; n++){
+                for(int d = 0; d < NDIM; ++d) r[n][d] = r_trial[n][d];
+            }
+            for(int d = 0; d < NDIM; ++d) box[d] = box_trial[d];
+            return 1;
+        }
+    }
+    //If overlap is not detected and the Boltzmann factor higher than 1, scale dimensions and return 1.
+    else {
+        for(int n = 0; n < N; n++){
+            for(int d = 0; d < NDIM; ++d) r[n][d] = r_trial[n][d];
+        }
+        for(int d = 0; d < NDIM; ++d) box[d] = box_trial[d];
+        return 1;
+    }
 }
 
 void read_data(void)
@@ -118,8 +172,8 @@ int move_particle(void){
         for(int d = 0; d < NDIM; d++)
         {
             dr[d] = new_pos[d] - r[q][d];
-            if(dr[d] > 0.5 * box[d]) dr[d] -= box[d];
-            else if(dr[d] < -0.5 * box[d]) dr[d] += box[d];
+            if(dr[d] >= 0.5 * box[d]) dr[d] -= box[d];
+            else if(dr[d] <= -0.5 * box[d]) dr[d] += box[d];
             dr2 += dr[d]*dr[d];
         }
 
