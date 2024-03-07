@@ -86,8 +86,59 @@ void read_data(void)
 }
 
 int move_particle(void){
-/*--------- Your code goes here -----------*/
-    return 0;
+    //pick a random particle
+    int index = (int) (dsfmt_genrand() * n_particles);
+
+    //arrays for the new position and move
+    double new_pos[NDIM];
+    double delta_r[NDIM];
+
+    //loop over dims and gen new coords
+    for(int i = 0; i < NDIM; i++)
+    {
+        //generate the new coord
+        delta_r[i] = (dsfmt_genrand() - 0.5) * delta;
+        new_pos[i] = r[index][i] + delta_r[i];
+
+        //make sure it's a position in the box
+        if(new_pos[i] < 0.0) new_pos[i] += box[i];
+        if(new_pos[i] >= box[i]) new_pos[i] -= box[i];
+    }
+
+    //overlap checker
+    for(int q = 0; q < n_particles; q++)
+    {
+        if(q == index) continue;
+
+        //some dubs for storage
+        double dr[NDIM];
+        double dr2 = 0.0;
+
+        //dim loop for new positions
+        for(int d = 0; d < NDIM; d++)
+        {
+            dr[d] = new_pos[d] - r[q][d];
+            if(dr[d] > 0.5 * box[d]) dr[d] -= box[d];
+            else if(dr[d] < -0.5 * box[d]) dr[d] += box[d];
+            dr2 += dr[d]*dr[d];
+        }
+
+        //if (overlap){don't}
+        if (sqrt(dr2) < diameter)
+        {
+        // Overlap detected, return 0 (not accepted)
+        return 0;
+        }
+    }
+
+    //loop through dimensions to save the new coord
+    for(int l = 0; l < NDIM; l++)
+    {
+        //process the move
+        r[index][l] = new_pos[l];
+    }
+    //apparently returning 1 is good in this context...
+    return 1;
 }
 
 int adjust_delta(int move_accepted, int vol_accepted){
