@@ -159,7 +159,7 @@ int distToNeighbors(void)
     int m,e,n;
 
     //loop for the main character particle
-    for(n=0; n <= n_particles/2; n++)
+    for(n=0; n <= n_particles; n++)
     {
         //loop for the extra
         for(e=1; e <= n_particles; e++)
