@@ -14,10 +14,10 @@
 /* Initialization variables */
 const int mc_steps = 1000;
 const int output_steps = 100;
-const double packing_fraction = 0.65;
+const double packing_fraction = 0.5;//0.65
 const double diameter = 0.1;
 const double delta = 0.1;
-const char* init_filename = "fcc5.dat";
+const char* init_filename = "fcc1.dat";
 
 /* Simulation variables */
 int n_particles = 0;
@@ -25,23 +25,40 @@ double radius;
 double particle_volume;
 double r[N][NDIM];
 double box[NDIM];
+double density;
 
 
 /* Functions */
 
 /* Read the initial configuration provided */
 void read_data(void){
+    //open the file
     FILE* fp = fopen(init_filename, "r");
-    int n, d;
+
+    //box size vars
     double dmin, dmax;//, dia;
+
+    //scan the first line of the fcc file
     fscanf(fp, "%d\n", &n_particles);
+
+    // sanity check
     assert(n_particles<10000);
-    for(d = 0; d < NDIM; ++d){
+
+    //get the size of the box
+    for(int d = 0; d < NDIM; ++d){
         fscanf(fp, "%lf %lf\n", &dmin, &dmax);
         box[d] = fabs(dmax-dmin);
     }
-    for(n = 0; n < n_particles; ++n){
-        for(d = 0; d < NDIM; ++d) fscanf(fp, "%lf\t", &r[n][d]);
+
+    //init var for inner loop once of efficiency
+    int dim;
+
+    //loops to read the coords from the file
+    for(int num = 0; num < n_particles; num++){
+        for(dim = 0; dim < NDIM; dim++)
+            {
+                fscanf(fp, "%lf\t", &r[num][dim]);
+            }
         //fscanf(fp, "%lf\n", &dia);
         //assert(dia==diameter);
     }
@@ -53,13 +70,14 @@ int move_particle(void){
     //Choose a random particle
     int rpid = n_particles * dsfmt_genrand();
 
+    //vars for the new positions and the 
     double new_pos[NDIM];
     int d;
     for(d = 0; d < NDIM; ++d){
         //Displace by a random value between -delta and delta
         new_pos[d] = r[rpid][d] + delta * (2.0 * dsfmt_genrand() - 1.0);
         //Apply periodic boundaries
-        //new_pos[d] -= floor(new_pos[d] / box[d]) * box[d];
+        new_pos[d] -= floor(new_pos[d] / box[d]) * box[d];
         if(new_pos[d]>box[d]) {
             new_pos[d]-=box[d];
         }
@@ -77,7 +95,7 @@ int move_particle(void){
         double dist = 0.0;
         for(d = 0; d < NDIM; ++d){
             double min_d = new_pos[d] - r[n][d];
-            // Find the distance with the Nearest Image Convension
+            // Find the distance with the Nearest Image Convention
             //min_d -= (int)(2.0 * min_d / box[d]) * box[d];
             if(min_d>0.5*box[d]) {
                 min_d -= box[d];
@@ -104,7 +122,7 @@ int move_particle(void){
 /* Write the configuration files */
 void write_data(int step){
     char buffer[128];
-    sprintf(buffer, "coords_step%07d.dat", step);
+    sprintf(buffer, "coordinates/coords_step%07d.dat", step);
     FILE* fp = fopen(buffer, "w");
     int d, n;
     fprintf(fp, "%d\n", n_particles);
@@ -135,7 +153,30 @@ void set_packing_fraction(void){
     for(d = 0; d < NDIM; ++d) box[d] *= scale_factor;
 }
 
+//distance calc func
+int distToNeighbors(void)
+{
+    int m,e,n;
+
+    //loop for the main character particle
+    for(n=0; n <= n_particles/2; n++)
+    {
+        //loop for the extra
+        for(e=1; e <= n_particles; e++)
+        {
+            //picking the next neighbor that hasn't been checked
+            m = e+n;
+
+            //!!! write to the array for the distance
+
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char* argv[]){
+    //local vars
+    double boxVol;
 
     assert(packing_fraction > 0.0 && packing_fraction < 1.0);
     assert(diameter > 0.0);
@@ -146,15 +187,17 @@ int main(int argc, char* argv[]){
     if(NDIM == 3) particle_volume = M_PI * pow(diameter, 3.0) / 6.0;
     else if(NDIM == 2) particle_volume = M_PI * pow(radius, 2.0);
     else{
-        printf("Number of dimensions NDIM = %d, not supported.", NDIM);
+        printf("\nNumber of dimensions NDIM = %d, not supported.", NDIM);
         return 0;
     }
     
-    printf("Particle Volume: %lf\n",particle_volume);
+    printf("\nParticle Volume: %lf\n",particle_volume);
 
     //Read the input configuration
     read_data();
-    printf("Box: %lf %lf %lf\n",box[0], box[1], box[2]);
+    //calc the initial box volume
+    boxVol = pow(box[0], 3);
+    printf("\nBox volume:\t\t  %lf\n", boxVol);
 
     if(n_particles == 0){
         printf("Error: Number of particles, n_particles = 0.\n");
@@ -163,10 +206,16 @@ int main(int argc, char* argv[]){
 
     //Set the packing fraction according to the set variable
     set_packing_fraction();
-    printf("Box: %lf %lf %lf\n",box[0], box[1], box[2]);
+    //recalc the box vol now that it's been scaled
+    boxVol = pow(box[0], 3);
+    printf("Box volume after pacFrac: %lf\n\n",boxVol);
 
+    //setting the density
+    density = n_particles / boxVol;
+    printf("\ndensity:\t%lf\n\n\n", density);
+
+    //mc stuff
     dsfmt_seed(time(NULL));
-
     int accepted = 0;
     int step, n;
     //Perform MC moves
@@ -175,12 +224,15 @@ int main(int argc, char* argv[]){
             accepted += move_particle();
         }
 
-        if(step % output_steps == 0){
-            printf("Step %d. Move acceptance: %f.\n", step, (double)accepted / (n_particles * output_steps));
+        if(step % output_steps == 0 & step > 0){
+            printf("Step %d.\tMove acceptance: %f.\n", step, (double)accepted / (n_particles * output_steps));
             accepted = 0;
             write_data(step);
         }
     }
+
+
+
 
     return 0;
 }
