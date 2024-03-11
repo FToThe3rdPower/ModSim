@@ -225,7 +225,8 @@ int main(int argc, char* argv[]){
         }
 
         if(step % output_steps == 0 & step > 0){
-            printf("Step %d.\tMove acceptance: %f.\n", step, (double)accepted / (n_particles * output_steps));
+            printf("Step %d.\tMove acceptance: %f.\n", step, (double)accepted
+                / (n_particles * output_steps));
             accepted = 0;
             write_data(step);
         }
