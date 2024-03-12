@@ -153,26 +153,64 @@ void set_packing_fraction(void){
     for(d = 0; d < NDIM; ++d) box[d] *= scale_factor;
 }
 
+
+
 //distance calc func
-int distToNeighbors(void)
+int distToNeighbors(int numParticles)
 {
-    int m,e,n;
+    //vars 'n arrs we'll need
+    int e,n, dim;
+    double pythag;
+    double cartDistArr[numParticles][numParticles-1][NDIM];
+    double absDistArr[numParticles];
 
     //loop for the main character particle
-    for(n=0; n <= n_particles; n++)
+    for(n=0; n <= numParticles; n++)
     {
-        //loop for the extra
-        for(e=1; e <= n_particles; e++)
+        //loop for the  "extra" supporting role
+        for(e=n+1; e < numParticles; e++)
         {
-            //picking the next neighbor that hasn't been checked
-            m = e+n;
+            //gotta consider each dimensions
+            for(dim=0; dim < NDIM; dim++)
+            {
+                //write to the array for the distance
+                cartDistArr[n][e][dim] = r[n][dim] - r[e][dim];
 
-            //!!! write to the array for the distance
+                //check the array, printing the results for each dim of each particle comparison
+                switch(dim)
+                {
+                    case 0:
+                        printf("particle %i_x - particle %i_x = %lf\n",
+                            n, e, cartDistArr[n][e][dim]);
+                        break;
 
+                    case 1:
+                        printf("particle %i_y - particle %i_y = %lf\n",
+                            n, e, cartDistArr[n][e][dim]);
+                        break;
+
+                    //final coord found, time to calc
+                    case 2:
+                        printf("particle %i_z - particle %i_z = %lf\n",
+                            n, e, cartDistArr[n][e][dim]);
+
+                        //pythagorize to get the total distance from particle to particle
+                        pythag = sqrt(pow(cartDistArr[n][e][dim],2 ) + pow(cartDistArr[n][e][dim-1],2) + pow(cartDistArr[n][e][dim-2],2 ));
+                        printf("dist p%i to p%i = %lf\n\n", n, e, pythag);
+                        break;
+                }
+            }
         }
     }
-    return 0;
+    if (sizeof(cartDistArr) > 0)
+    {
+        return 0;
+    }
+    else{return 1;}
 }
+
+
+
 
 int main(int argc, char* argv[]){
     //local vars
@@ -191,10 +229,14 @@ int main(int argc, char* argv[]){
         return 0;
     }
     
-    printf("\nParticle Volume: %lf\n",particle_volume);
 
     //Read the input configuration
     read_data();
+
+    //sanity checks
+    printf("\nNumber of particles:%i", n_particles);
+    printf("\nParticle Volume: %lf\n",particle_volume);
+
     //calc the initial box volume
     boxVol = pow(box[0], 3);
     printf("\nBox volume:\t\t  %lf\n", boxVol);
@@ -224,11 +266,13 @@ int main(int argc, char* argv[]){
             accepted += move_particle();
         }
 
+        //print and write the move every output_step, default is 100
         if(step % output_steps == 0 & step > 0){
             printf("Step %d.\tMove acceptance: %f.\n", step, (double)accepted
                 / (n_particles * output_steps));
             accepted = 0;
             write_data(step);
+            distToNeighbors(n_particles);
         }
     }
 
