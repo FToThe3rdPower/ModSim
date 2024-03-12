@@ -123,7 +123,7 @@ int move_particle(void){
 void write_data(int step){
     char buffer[128];
     sprintf(buffer, "coordinates/coords_step%07d.dat", step);
-    FILE* fp = fopen(buffer, "w");
+    FILE *fp = fopen(buffer, "w");
     int d, n;
     fprintf(fp, "%d\n", n_particles);
     for(d = 0; d < NDIM; ++d){
@@ -137,8 +137,7 @@ void write_data(int step){
 }
 
 /* Scales the box volume and coordinates read from 'init_fileaname'
- * according to the value of 'packing fraction'
- * */
+ according to the value of 'packing fraction'*/
 void set_packing_fraction(void){
     double volume = 1.0;
     int d, n;
@@ -155,14 +154,18 @@ void set_packing_fraction(void){
 
 
 
+
+
 //distance calc func
-int distToNeighbors(int numParticles)
+int distToNeighbors(int numParticles, int step)
 {
     //vars 'n arrs we'll need
-    int e,n, dim;
+    int e, n, dim;
     double pythag;
     double cartDistArr[numParticles][numParticles-1][NDIM];
-    double absDistArr[numParticles];
+
+    //file we'll need
+    FILE *distFile = fopen("distances.txt", "w");
 
     //loop for the main character particle
     for(n=0; n <= numParticles; n++)
@@ -173,6 +176,13 @@ int distToNeighbors(int numParticles)
             //gotta consider each dimensions
             for(dim=0; dim < NDIM; dim++)
             {
+                //make the header text for the file
+                if(n==0 & e==1 & dim==0)
+                {
+                    fprintf(distFile, "Step\tp1\tp2\tDistance,\tdensity:%lf\n", density);
+                }
+
+
                 //write to the array for the distance
                 cartDistArr[n][e][dim] = r[n][dim] - r[e][dim];
 
@@ -189,25 +199,36 @@ int distToNeighbors(int numParticles)
                             n, e, cartDistArr[n][e][dim]);
                         break;
 
-                    //final coord found, time to calc
+                    //final coord dist found, time to calc the distance
                     case 2:
                         printf("particle %i_z - particle %i_z = %lf\n",
                             n, e, cartDistArr[n][e][dim]);
 
                         //pythagorize to get the total distance from particle to particle
                         pythag = sqrt(pow(cartDistArr[n][e][dim],2 ) + pow(cartDistArr[n][e][dim-1],2) + pow(cartDistArr[n][e][dim-2],2 ));
+                        
+
+                        //put it in da file
+                        fprintf(distFile, "%i\t%i\t%i\t%lf\n", step, n, e, pythag);
+
+                        //print it to be sure
                         printf("dist p%i to p%i = %lf\n\n", n, e, pythag);
                         break;
                 }
             }
         }
     }
+
+    //close the file now that we're done
+    fclose(distFile);
     if (sizeof(cartDistArr) > 0)
     {
         return 0;
     }
     else{return 1;}
 }
+
+
 
 
 
@@ -272,7 +293,7 @@ int main(int argc, char* argv[]){
                 / (n_particles * output_steps));
             accepted = 0;
             write_data(step);
-            distToNeighbors(n_particles);
+            distToNeighbors(n_particles, step);
         }
     }
 
